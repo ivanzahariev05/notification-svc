@@ -1,16 +1,16 @@
-package service;
+package com.example.notificationsvc.service;
 
 import lombok.extern.slf4j.Slf4j;
-import model.Notification;
-import model.NotificationPreference;
-import model.NotificationStatus;
+import com.example.notificationsvc.model.Notification;
+import com.example.notificationsvc.model.NotificationPreference;
+import com.example.notificationsvc.model.NotificationStatus;
 import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.stereotype.Service;
-import repository.NotificationPreferenceRepository;
-import repository.NotificationRepository;
-import web.dto.NotificationRequest;
-import web.dto.UpsertNotificationPreference;
+import com.example.notificationsvc.repository.NotificationPreferenceRepository;
+import com.example.notificationsvc.repository.NotificationRepository;
+import com.example.notificationsvc.web.dto.NotificationRequest;
+import com.example.notificationsvc.web.dto.UpsertNotificationPreference;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
@@ -32,17 +32,19 @@ public class NotificationService {
 
     public NotificationPreference upsertPreference(UpsertNotificationPreference upsertNotificationPreference) {
 
-        Optional<NotificationPreference> userPreferenceOptional = notificationPreferenceRepository.findUserById(upsertNotificationPreference.getUserId());
+        Optional<NotificationPreference> userPreferenceOptional = notificationPreferenceRepository.findByUserId(upsertNotificationPreference.getUserId());
         if (userPreferenceOptional.isPresent()) {
             NotificationPreference userPreference = userPreferenceOptional.get();
-            userPreference.setEnabled(upsertNotificationPreference.isNotificationEnabled());
+            userPreference.setEnabled(upsertNotificationPreference.isEnabled());
             userPreference.setUpdatedOn(LocalDateTime.now());
+            userPreference.setEmail(upsertNotificationPreference.getEmail());
             return notificationPreferenceRepository.save(userPreference);
         }
 
         NotificationPreference notificationPreference = NotificationPreference.builder()
                 .userId(upsertNotificationPreference.getUserId())
-                .enabled(upsertNotificationPreference.isNotificationEnabled())
+                .enabled(upsertNotificationPreference.isEnabled())
+                .email(upsertNotificationPreference.getEmail())
                 .updatedOn(LocalDateTime.now())
                 .createdOn(LocalDateTime.now())
                 .build();
@@ -50,7 +52,7 @@ public class NotificationService {
     }
 
     public NotificationPreference getPreferenceByUserId(UUID userId) {
-        Optional<NotificationPreference> userById = notificationPreferenceRepository.findUserById(userId);
+        Optional<NotificationPreference> userById = notificationPreferenceRepository.findByUserId(userId);
         return userById.orElseThrow(() -> new NullPointerException("User with id " + userId + " not found"));
     }
 
@@ -64,8 +66,10 @@ public class NotificationService {
         }
 
        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(notificationPreference.getEmail());
         message.setSubject(notificationRequest.getSubject());
         message.setText(notificationRequest.getBody());
+
 
         Notification notification = Notification.builder()
                 .subject(notificationRequest.getSubject())
