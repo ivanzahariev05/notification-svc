@@ -87,4 +87,25 @@ public class NotificationService {
         }
         return notificationRepository.save(notification);
     }
+
+    public void sendWelcomeEmail(UUID userId) {
+        NotificationPreference preference = getPreferenceByUserId(userId);
+
+        if (!preference.isEnabled()) {
+            log.warn("Notification preference is disabled for user with id: " + userId);
+            return;
+        }
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(preference.getEmail());
+        message.setSubject("Welcome to NutriBoost!");
+        message.setText("Thank you for signing up! We are glad to have you with us.");
+
+        try {
+            mailSender.send(message);
+            log.info("Welcome email sent to {}", preference.getEmail());
+        } catch (Exception e) {
+            log.error("Failed to send welcome email to {}: {}", preference.getEmail(), e.getMessage());
+        }
+    }
 }
