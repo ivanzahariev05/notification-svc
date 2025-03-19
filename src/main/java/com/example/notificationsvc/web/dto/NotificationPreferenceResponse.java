@@ -1,4 +1,4 @@
-package web.dto;
+package com.example.notificationsvc.web.dto;
 
 import lombok.Builder;
 import lombok.Data;
@@ -13,7 +13,7 @@ public class NotificationPreferenceResponse {
 
     private UUID userId;
 
-    private boolean isEnabled;
+    private boolean enabled;
 
 
 }

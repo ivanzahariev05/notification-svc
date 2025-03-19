@@ -1,6 +1,6 @@
-package repository;
+package com.example.notificationsvc.repository;
 
-import model.Notification;
+import com.example.notificationsvc.model.Notification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

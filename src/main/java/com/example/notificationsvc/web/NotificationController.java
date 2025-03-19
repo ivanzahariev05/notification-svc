@@ -1,16 +1,13 @@
-package web;
+package com.example.notificationsvc.web;
 
-import model.Notification;
-import model.NotificationPreference;
+import com.example.notificationsvc.model.NotificationPreference;
+import com.example.notificationsvc.service.NotificationService;
+import com.example.notificationsvc.web.dto.NotificationPreferenceResponse;
+import com.example.notificationsvc.web.dto.UpsertNotificationPreference;
+import com.example.notificationsvc.web.mapper.DtoMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import service.NotificationService;
-import web.dto.NotificationPreferenceResponse;
-import web.dto.NotificationRequest;
-import web.dto.NotificationResponse;
-import web.dto.UpsertNotificationPreference;
-import web.mapper.DtoMapper;
 
 import java.util.UUID;
 
@@ -44,13 +41,18 @@ public class NotificationController {
                 .body(notificationPreferenceResponse);
     }
 
-    @PostMapping()
-    public ResponseEntity<NotificationResponse> sendNotification(@RequestBody NotificationRequest notificationRequest) {
-        Notification notification = notificationService.sendNotification(notificationRequest);
-        NotificationResponse notificationResponse = DtoMapper.toNotificationRequest(notification);
 
+    @PostMapping("/welcome")
+    public ResponseEntity<Void> sendWelcomeEmail(@RequestParam UUID userId) {
+        notificationService.sendWelcomeEmail(userId);
         return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(notificationResponse);
+                .status(HttpStatus.OK)
+                .build();
+    }
+
+    @PostMapping("/toggle")
+    public ResponseEntity<Void> togglePreference(@RequestParam UUID userId) {
+        notificationService.togglePreference(userId);
+        return ResponseEntity.ok().build();
     }
 }

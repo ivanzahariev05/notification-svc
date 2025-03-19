@@ -1,4 +1,4 @@
-package model;
+package com.example.notificationsvc.model;
 
 public enum NotificationStatus {
 

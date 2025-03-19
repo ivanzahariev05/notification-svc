@@ -1,10 +1,10 @@
-package web.dto;
+package com.example.notificationsvc.web.dto;
 
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import lombok.Builder;
 import lombok.Data;
-import model.NotificationStatus;
+import com.example.notificationsvc.model.NotificationStatus;
 
 import java.time.LocalDateTime;
 

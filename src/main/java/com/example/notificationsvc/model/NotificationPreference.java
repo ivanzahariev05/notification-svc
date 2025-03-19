@@ -1,4 +1,4 @@
-package model;
+package com.example.notificationsvc.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -24,9 +24,6 @@ public class NotificationPreference {
     private UUID userId;
 
     @Column(nullable = false)
-    private String body;
-
-    @Column(nullable = false)
     private boolean enabled;
 
     @Column(nullable = false)
@@ -34,5 +31,8 @@ public class NotificationPreference {
 
     @Column(nullable = false)
     private LocalDateTime updatedOn;
+
+    @Column(nullable = false)
+    private String email;
 
 }

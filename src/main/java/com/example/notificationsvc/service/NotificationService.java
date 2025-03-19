@@ -48,7 +48,7 @@ public class NotificationService {
                 .updatedOn(LocalDateTime.now())
                 .createdOn(LocalDateTime.now())
                 .build();
-         return notificationPreferenceRepository.save(notificationPreference);
+        return notificationPreferenceRepository.save(notificationPreference);
     }
 
     public NotificationPreference getPreferenceByUserId(UUID userId) {
@@ -57,44 +57,82 @@ public class NotificationService {
     }
 
     public Notification sendNotification(NotificationRequest notificationRequest) {
+        log.info("Received sendNotification request with DTO: {}", notificationRequest);
 
-        UUID userId = notificationRequest.getUserId();
-        NotificationPreference notificationPreference = getPreferenceByUserId(userId);
-
-        if (!notificationPreference.isEnabled()){
-            throw new IllegalArgumentException("Notification preference is disabled for user with id: " + userId);
+        if (notificationRequest == null || notificationRequest.getUserId() == null) {
+            log.error("NotificationRequest or userId is null! Something is wrong.");
+            throw new IllegalArgumentException("Invalid NotificationRequest: userId is missing");
         }
 
-       SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(notificationPreference.getEmail());
-        message.setSubject(notificationRequest.getSubject());
-        message.setText(notificationRequest.getBody());
+        return sendNotification(notificationRequest.getUserId(), notificationRequest.getSubject(), notificationRequest.getBody());
+    }
 
+    public Notification sendNotification(UUID userId, String subject, String body) {
+        log.info("Processing sendNotification for userId: {}, subject: {}", userId, subject);
+
+        if (userId == null) {
+            log.error("userId is NULL! Cannot proceed.");
+            throw new IllegalArgumentException("User ID cannot be null");
+        }
+
+        NotificationPreference notificationPreference = getPreferenceByUserId(userId);
+        if (notificationPreference == null) {
+            log.error("No notification preference found for userId: {}", userId);
+            throw new IllegalArgumentException("Notification preference not found for user: " + userId);
+        }
+
+        if (!notificationPreference.isEnabled()) {
+            log.warn("Notification preference is disabled for userId: {}", userId);
+            throw new IllegalArgumentException("Notification preference is disabled for user: " + userId);
+        }
+
+        log.info("Sending email to: {}", notificationPreference.getEmail());
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(notificationPreference.getEmail());
+        message.setSubject(subject);
+        message.setText(body);
 
         Notification notification = Notification.builder()
-                .subject(notificationRequest.getSubject())
-                .body(notificationRequest.getBody())
+                .userId(userId)
+                .subject(subject)
+                .body(body)
                 .createdAt(LocalDateTime.now())
                 .isDeleted(false)
                 .build();
 
-        try{
+        notificationRepository.save(notification);
+
+        try {
             mailSender.send(message);
             notification.setStatus(NotificationStatus.SUCCEED);
-        }catch (Exception e){
+            log.info("Email successfully sent to {}", notificationPreference.getEmail());
+        } catch (Exception e) {
             notification.setStatus(NotificationStatus.FAILED);
-            log.error("There was an issue sending the notification, due to %s", e);
+            log.error("Failed to send email to {}", notificationPreference.getEmail(), e);
         }
+
         return notificationRepository.save(notification);
     }
 
-    public void sendWelcomeEmail(UUID userId) {
+    public void
+    sendWelcomeEmail(UUID userId) {
         NotificationPreference preference = getPreferenceByUserId(userId);
 
         if (!preference.isEnabled()) {
             log.warn("Notification preference is disabled for user with id: " + userId);
             return;
         }
+
+        Notification notification = Notification.builder()
+                .userId(userId)
+                .subject("Welcome to NutriBoost!")
+                .body("Thank you for signing up! We are glad to have you with us.")
+                .status(NotificationStatus.SUCCEED)
+                .createdAt(LocalDateTime.now())
+                .isDeleted(false)
+                .build();
+        notificationRepository.save(notification);
 
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(preference.getEmail());
@@ -103,9 +141,17 @@ public class NotificationService {
 
         try {
             mailSender.send(message);
-            log.info("Welcome email sent to {}", preference.getEmail());
+            log.info("Welcome email sent");
         } catch (Exception e) {
-            log.error("Failed to send welcome email to {}: {}", preference.getEmail(), e.getMessage());
+            log.error("Failed to send welcome email");
         }
+    }
+
+    public void togglePreference(UUID userId) {
+        NotificationPreference preference = notificationPreferenceRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Preference not found"));
+
+        preference.setEnabled(!preference.isEnabled());
+        notificationPreferenceRepository.save(preference);
     }
 }

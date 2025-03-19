@@ -1,12 +1,10 @@
-package web.mapper;
+package com.example.notificationsvc.web.mapper;
 
 import lombok.experimental.UtilityClass;
-import model.Notification;
-import model.NotificationPreference;
-import model.NotificationStatus;
-import web.dto.NotificationPreferenceResponse;
-import web.dto.NotificationRequest;
-import web.dto.NotificationResponse;
+import com.example.notificationsvc.model.Notification;
+import com.example.notificationsvc.model.NotificationPreference;
+import com.example.notificationsvc.web.dto.NotificationPreferenceResponse;
+import com.example.notificationsvc.web.dto.NotificationResponse;
 
 @UtilityClass
 public class DtoMapper {
@@ -16,7 +14,7 @@ public class DtoMapper {
                 builder().
                 id(notificationPreference.getId()).
                 userId(notificationPreference.getUserId()).
-                isEnabled(notificationPreference.isEnabled()).
+                enabled(notificationPreference.isEnabled()).
                 build();
     }
 

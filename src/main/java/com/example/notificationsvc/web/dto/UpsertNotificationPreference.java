@@ -1,4 +1,4 @@
-package web.dto;
+package com.example.notificationsvc.web.dto;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
@@ -13,5 +13,9 @@ public class UpsertNotificationPreference {
     @NotNull
     private UUID userId;
 
-    private boolean notificationEnabled;
+    private boolean enabled;
+
+    @NotNull
+    private String email;
+
 }
