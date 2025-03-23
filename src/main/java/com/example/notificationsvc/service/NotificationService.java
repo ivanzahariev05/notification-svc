@@ -1,5 +1,6 @@
 package com.example.notificationsvc.service;
 
+import com.example.notificationsvc.NoResourceFoundException;
 import lombok.extern.slf4j.Slf4j;
 import com.example.notificationsvc.model.Notification;
 import com.example.notificationsvc.model.NotificationPreference;
@@ -53,7 +54,7 @@ public class NotificationService {
 
     public NotificationPreference getPreferenceByUserId(UUID userId) {
         Optional<NotificationPreference> userById = notificationPreferenceRepository.findByUserId(userId);
-        return userById.orElseThrow(() -> new NullPointerException("User with id " + userId + " not found"));
+        return userById.orElseThrow(() -> new NoResourceFoundException("User with id " + userId + " not found"));
     }
 
     public Notification sendNotification(NotificationRequest notificationRequest) {
@@ -70,23 +71,12 @@ public class NotificationService {
     public Notification sendNotification(UUID userId, String subject, String body) {
         log.info("Processing sendNotification for userId: {}, subject: {}", userId, subject);
 
-        if (userId == null) {
-            log.error("userId is NULL! Cannot proceed.");
-            throw new IllegalArgumentException("User ID cannot be null");
-        }
-
         NotificationPreference notificationPreference = getPreferenceByUserId(userId);
-        if (notificationPreference == null) {
-            log.error("No notification preference found for userId: {}", userId);
-            throw new IllegalArgumentException("Notification preference not found for user: " + userId);
-        }
 
         if (!notificationPreference.isEnabled()) {
             log.warn("Notification preference is disabled for userId: {}", userId);
             throw new IllegalArgumentException("Notification preference is disabled for user: " + userId);
         }
-
-        log.info("Sending email to: {}", notificationPreference.getEmail());
 
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(notificationPreference.getEmail());
@@ -101,17 +91,17 @@ public class NotificationService {
                 .isDeleted(false)
                 .build();
 
-        notificationRepository.save(notification);
-
+        NotificationStatus status;
         try {
             mailSender.send(message);
-            notification.setStatus(NotificationStatus.SUCCEED);
+            status = NotificationStatus.SUCCEED;
             log.info("Email successfully sent to {}", notificationPreference.getEmail());
         } catch (Exception e) {
-            notification.setStatus(NotificationStatus.FAILED);
+            status = NotificationStatus.FAILED;
             log.error("Failed to send email to {}", notificationPreference.getEmail(), e);
         }
 
+        notification.setStatus(status);
         return notificationRepository.save(notification);
     }
 

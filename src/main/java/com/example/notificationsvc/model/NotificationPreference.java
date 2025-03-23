@@ -9,11 +9,11 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Entity
 @Data
+@Entity
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class NotificationPreference {
 
     @Id
@@ -34,5 +34,14 @@ public class NotificationPreference {
 
     @Column(nullable = false)
     private String email;
+
+    public NotificationPreference(UUID userId, boolean enabled, String email, LocalDateTime createdOn, LocalDateTime updatedOn) {
+        this.userId = userId;
+        this.enabled = enabled;
+        this.email = email;
+        this.createdOn = createdOn;
+        this.updatedOn = updatedOn;
+    }
+
 
 }
